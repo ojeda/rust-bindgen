@@ -1,0 +1,85 @@
+on:
+  push:
+    branches: [linux]
+
+jobs:
+  bindgen:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+
+    strategy:
+      matrix:
+        version: [
+          0.56.0,
+          0.57.0,
+        ]
+        target: [
+          aarch64-unknown-linux-gnu,
+          arm-unknown-linux-gnueabihf,
+          i686-unknown-linux-gnu,
+          powerpc64le-unknown-linux-gnu,
+          s390x-unknown-linux-gnu,
+          x86_64-unknown-linux-gnu,
+        ]
+
+    steps:
+      # Setup: checkout
+      - uses: actions/checkout@v2
+        with:
+          ref: v${{ matrix.version }}
+
+      # Setup: variables
+      - if: startsWith(matrix.target, 'aarch64')
+        run: echo 'QEMU_CMD=qemu-aarch64 -L /usr/aarch64-linux-gnu' >> $GITHUB_ENV
+      - if: startsWith(matrix.target, 'arm')
+        run: echo 'QEMU_CMD=qemu-arm -L /usr/arm-linux-gnueabihf' >> $GITHUB_ENV
+      - if: startsWith(matrix.target, 'powerpc64le')
+        run: echo 'QEMU_CMD=qemu-ppc64le -L /usr/powerpc64le-linux-gnu' >> $GITHUB_ENV
+      - if: startsWith(matrix.target, 's390x')
+        run: echo 'QEMU_CMD=qemu-s390x -L /usr/s390x-linux-gnu' >> $GITHUB_ENV
+
+      # Setup: GCC
+      - if: startsWith(matrix.target, 'aarch64')
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+      - if: startsWith(matrix.target, 'arm')
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf
+      - if: startsWith(matrix.target, 'i686')
+        run: sudo apt-get install -y gcc-multilib
+      - if: startsWith(matrix.target, 'powerpc64le')
+        run: sudo apt-get install -y gcc-powerpc64le-linux-gnu
+      - if: startsWith(matrix.target, 's390x')
+        run: sudo apt-get install -y gcc-s390x-linux-gnu
+
+      # Setup: QEMU
+      - run: sudo apt-get install -y qemu-user
+
+      # Setup: rustc
+      - run: rustup update
+      - run: rustup target add ${{ matrix.target }}
+
+      # Setup: cargo
+      - run: mv .github/workflows/cargo.config $HOME/.cargo/config
+
+      # Build
+      - run: cargo install bindgen --locked --version ${{ matrix.version }} --target=${{ matrix.target }} --root=build
+      - run: cd build/bin && sha256sum -b bindgen | tee bindgen.sha256
+
+      # Report
+      - run: ls -l build/bin/bindgen*
+      - run: size build/bin/bindgen
+      - run: file build/bin/bindgen
+      - run: readelf -hd build/bin/bindgen
+      - run: objdump -T build/bin/bindgen
+
+      # Check
+      - run: ${{ env.QEMU_CMD }} build/bin/bindgen --version | grep -F 'bindgen ${{ matrix.version }}'
+      - if: startsWith(matrix.target, 'x86_64')
+        run: |
+          build/bin/bindgen .github/workflows/test.h | tail +3 > test.rs
+          cat .github/workflows/test.rs | tail +3 | cmp test.rs
+
+      # Upload
+      - uses: actions/upload-artifact@v2
+        with:
+          name: bindgen-${{ matrix.version }}-${{ matrix.target }}
+          path: build/bin/bindgen*
