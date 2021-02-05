@@ -3823,11 +3823,32 @@ impl CodeGenerator for Function {
             });
 
         let ident = ctx.rust_ident(canonical_name);
-        let tokens = quote! {
-            #wasm_link_attribute
-            extern #abi {
-                #(#attributes)*
-                pub fn #ident ( #( #args ),* ) #ret;
+
+        let tokens = if signature.safe() {
+            let args_identifiers =
+                utils::fnsig_argument_identifiers(ctx, signature);
+
+            quote! {
+                mod internal {
+                    #wasm_link_attribute
+                    extern #abi {
+                        #(#attributes)*
+                        pub fn #ident ( #( #args ),* ) #ret;
+                    }
+                }
+
+                #[inline]
+                pub fn #ident ( #( #args ),* ) #ret {
+                    unsafe { internal:: #ident (#( #args_identifiers ),*) }
+                }
+            }
+        } else {
+            quote! {
+                #wasm_link_attribute
+                extern #abi {
+                    #(#attributes)*
+                    pub fn #ident ( #( #args ),* ) #ret;
+                }
             }
         };
 

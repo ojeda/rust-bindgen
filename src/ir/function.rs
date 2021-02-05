@@ -225,6 +225,9 @@ pub struct FunctionSig {
     /// Whether this function's return value must be used.
     must_use: bool,
 
+    /// Whether this function's is marked as safe.
+    safe: bool,
+
     /// The ABI of this function.
     abi: Abi,
 }
@@ -351,6 +354,7 @@ impl FunctionSig {
         argument_types: Vec<(Option<String>, TypeId)>,
         is_variadic: bool,
         must_use: bool,
+        safe: bool,
         abi: Abi,
     ) -> Self {
         FunctionSig {
@@ -358,6 +362,7 @@ impl FunctionSig {
             argument_types,
             is_variadic,
             must_use,
+            safe,
             abi: abi,
         }
     }
@@ -441,6 +446,8 @@ impl FunctionSig {
 
         let must_use = ctx.options().enable_function_attribute_detection &&
             cursor.has_warn_unused_result_attr();
+        let safe = ctx.options().enable_function_attribute_detection &&
+            cursor.has_safe_attr();
         let is_method = kind == CXCursor_CXXMethod;
         let is_constructor = kind == CXCursor_Constructor;
         let is_destructor = kind == CXCursor_Destructor;
@@ -520,7 +527,7 @@ impl FunctionSig {
             warn!("Unknown calling convention: {:?}", call_conv);
         }
 
-        Ok(Self::new(ret.into(), args, ty.is_variadic(), must_use, abi))
+        Ok(Self::new(ret.into(), args, ty.is_variadic(), must_use, safe, abi))
     }
 
     /// Get this function signature's return type.
@@ -549,6 +556,11 @@ impl FunctionSig {
     /// Must this function's return value be used?
     pub fn must_use(&self) -> bool {
         self.must_use
+    }
+
+    /// Is this function marked as safe?
+    pub fn safe(&self) -> bool {
+        self.safe
     }
 
     /// Are function pointers with this signature able to derive Rust traits?

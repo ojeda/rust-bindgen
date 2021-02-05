@@ -1143,13 +1143,13 @@ impl Builder {
         self
     }
 
-    /// Enable detecting must_use attributes on C functions.
+    /// Enable detecting must_use and safe attributes on C functions.
     ///
     /// This is quite slow in some cases (see #1465), so it's disabled by
     /// default.
     ///
-    /// Note that for this to do something meaningful for now at least, the rust
-    /// target version has to have support for `#[must_use]`.
+    /// Note that for `must_use` to do something meaningful now at least,
+    /// the rust target version has to have support for `#[must_use]`.
     pub fn enable_function_attribute_detection(mut self) -> Self {
         self.options.enable_function_attribute_detection = true;
         self
@@ -1621,7 +1621,8 @@ struct BindgenOptions {
     enable_cxx_namespaces: bool,
 
     /// True if we should try to find unexposed attributes in functions, in
-    /// order to be able to generate #[must_use] attributes in Rust.
+    /// order to be able to generate #[must_use] attributes in Rust and
+    /// identify C functions marked as `[[safe]]`.
     enable_function_attribute_detection: bool,
 
     /// True if we should avoid mangling names with namespaces.

@@ -543,6 +543,13 @@ impl Cursor {
         self.has_attr("warn_unused_result", Some(CXCursor_WarnUnusedResultAttr))
     }
 
+    /// Whether this cursor has the `safe` attribute.
+    pub fn has_safe_attr(&self) -> bool {
+        // FIXME(ojeda): clang-sys doesn't expose this (from clang 11-safe).
+        const CXCursor_SafeAttr: CXCursorKind = 442;
+        self.has_attr("safe", Some(CXCursor_SafeAttr))
+    }
+
     /// Does this cursor have the given attribute?
     ///
     /// `name` is checked against unexposed attributes.

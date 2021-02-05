@@ -479,7 +479,7 @@ where
                 .long("enable-function-attribute-detection")
                 .help(
                     "Enables detecting unexposed attributes in functions (slow).
-                       Used to generate #[must_use] annotations.",
+                       Used to generate #[must_use] annotations and identifying C functions marked as [[safe]].",
                 ),
             Arg::with_name("use-array-pointers-in-arguments")
                 .long("use-array-pointers-in-arguments")
