@@ -141,6 +141,8 @@ if [ "$BINDGEN_RUST_FOR_LINUX_TEST" == "1" ]; then
   (cd bindgen-cli && cargo build $CARGO_ARGS)
   export PATH="${PWD}/target/release:${PWD}/target/debug:${PATH}"
 
+  bindgen --version --verbose
+
   # Kernel build dependency: `libelf-dev`.
   sudo apt-get update
   sudo apt-get install libelf-dev

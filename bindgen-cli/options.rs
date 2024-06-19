@@ -598,7 +598,7 @@ where
             option_env!("CARGO_PKG_VERSION").unwrap_or("unknown")
         );
         if verbose {
-            println!("Clang: {}", bindgen::clang_version().full);
+            println!("Clang: {} xxx", bindgen::clang_version().full);
         }
         std::process::exit(0);
     }
