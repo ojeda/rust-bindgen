@@ -130,6 +130,8 @@ if [ "$BINDGEN_RUST_FOR_LINUX_TEST" == "1" ]; then
   # go first since there are others in the Ubuntu image.
   export PATH="${LLVM_DIRECTORY}/bin:${PATH}"
 
+  command -v bindgen
+
   # Kernel build dependency: `bindgen-cli`, which is under test.
   #
   # Using `cargo build` (and adding the two common profiles to the `$PATH`) so
@@ -141,6 +143,10 @@ if [ "$BINDGEN_RUST_FOR_LINUX_TEST" == "1" ]; then
   (cd bindgen-cli && cargo build $CARGO_ARGS)
   export PATH="${PWD}/target/release:${PWD}/target/debug:${PATH}"
 
+  echo "PWD = $PWD"
+  echo "HOME = $HOME"
+  echo "PATH = $PATH"
+  command -v bindgen
   bindgen --version --verbose
 
   # Kernel build dependency: `libelf-dev`.
